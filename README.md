@@ -7,6 +7,7 @@
     - [Debugging issues](#debugging-issues)
   - [3. Setting up additional ports for log inguestion](#3-setting-up-additional-ports-for-log-inguestion)
   - [4. Setting up a integration](#4-setting-up-a-integration)
+  - [5. Setting up an Agent](#5-setting-up-an-agent)
 
 
 ## 1. What is the Elastic Stack
@@ -70,9 +71,7 @@ If you try to debug a Logstash input, ajdust the `logstash.conf` to show verbose
 ```json
     ...
     # Debug Output: Print events to console
-    stdout {
-        codec => rubydebug
-    }
+    stdout { codec => rubydebug }
 ```
 
 To see what issue cause a container to crash or behave unexpected run `docker logs <CONTAINERNAME>` - e.g.:
@@ -113,3 +112,15 @@ Using the `-f` flag, is constantly following the log stream and printing the new
         }
     ```
 
+Furthermore I added the `Windows` integration and configured it to inguest Sysmon, Defender and Powershell logs.
+
+## 5. Setting up an Agent 
+
+```powershell
+
+$ProgressPreference = 'SilentlyContinue'
+Invoke-WebRequest -Uri https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-8.7.1-windows-x86_64.zip -OutFile elastic-agent-8.7.1-windows-x86_64.zip
+Expand-Archive .\elastic-agent-8.7.1-windows-x86_64.zip -DestinationPath .
+cd elastic-agent-8.7.1-windows-x86_64
+.\elastic-agent.exe install
+```

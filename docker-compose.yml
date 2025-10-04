@@ -53,6 +53,12 @@ services:
           "      - localhost\n"\
           "    ip:\n"\
           "      - 127.0.0.1\n"\
+          "  - name: fleet-server\n"\
+          "    dns:\n"\
+          "      - fleet-server\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
           > config/certs/instances.yml;
           bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
           unzip config/certs/certs.zip -d config/certs;
@@ -138,6 +144,7 @@ services:
       - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTION_KEY}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTION_KEY}
       - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTION_KEY}
+      - XPACK_FLEET_AGENTS_TLS_CERT=config/certs/ca/ca.crt
     mem_limit: ${KB_MEM_LIMIT}
     healthcheck:
       test:
@@ -148,6 +155,46 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+
+  fleet-server:
+    depends_on:
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/elastic-agent/elastic-agent:${STACK_VERSION}
+    user: root
+    volumes:
+      - certs:/usr/share/elastic-agent/certs
+      - ./fleet-server.yml:/usr/share/elastic-agent/fleet-server.yml:ro
+    ports:
+      - 8220:8220 
+    environment:
+      - FLEET_SERVER_ENABLE=true
+      - KIBANA_HOST=https://kibana:5601
+      - KIBANA_AUTH=kibana_system:${KIBANA_PASSWORD}
+      - FLEET_SERVER_HOST=0.0.0.0
+      - FLEET_SERVER_PORT=8220
+      - FLEET_SERVER_SERVICE_URL=https://fleet-server:8220
+      - FLEET_SERVER_SERVICE_TOKEN=${FLEET_TOKEN}
+      - FLEET_SERVER_INSECURE_HTTP=false
+      - FLEET_SERVER_ES_HOST=https://es01:9200
+      - FLEET_SERVER_ES_CA=/usr/share/elastic-agent/certs/ca/ca.crt
+      - FLEET_SERVER_CERT=/usr/share/elastic-agent/certs/fleet-server/fleet-server.crt
+      - FLEET_SERVER_CERT_KEY=/usr/share/elastic-agent/certs/fleet-server/fleet-server.key
+      - FLEET_URL=https://fleet-server:8220
+      - FLEET_CA=/usr/share/elastic-agent/certs/ca/ca.crt
+      - FEET_TOKEN=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3NTk1ODAyOTYzNjQ6NmU3NkxZUEdRWC1naktRQ2FPbGtZQQ
+      - ELASTIC_AGENT_ID=fleet-server-01
+      - ELASTIC_AGENT_CA=/usr/share/elastic-agent/certs/ca/ca.crt
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -k --cert certs/fleet-server/fleet-server.crt --key certs/fleet-server/fleet-server.key https://localhost:8220/api/fleet/status | grep -q 'ok'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+      start_period: 30s
 
   metricbeat01:
     depends_on:
@@ -201,14 +248,15 @@ services:
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     labels:
       co.elastic.logs/module: logstash
-    user: root
+    user: logstash
     volumes:
       - certs:/usr/share/logstash/certs
       - logstashdata01:/usr/share/logstash/data
       - "./logstash_ingest_data/:/usr/share/logstash/ingest_data/"
       - "./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     ports:
-      - "5141:5141/udp" # UDP Syslog
+      - "5044:5044"     # Beats (TCP)
+      - "5141:5141/udp" # Syslog (UDP)
     environment:
       - xpack.monitoring.enabled=false
       - ELASTIC_USER=elastic

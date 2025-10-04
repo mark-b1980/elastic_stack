@@ -1,0 +1,19 @@
+fleet.server:
+  port: 8220
+  host: 0.0.0.0
+  policy_id: fleet-server-policy
+  hosts: ["https://fleet-server:8220"]
+
+  # SSL Configuration
+  ssl.enabled: true
+  ssl.certificate: "/usr/share/elastic-agent/certs/fleet-server/fleet-server.crt"
+  ssl.key: "/usr/share/elastic-agent/certs/fleet-server/fleet-server.key"
+  ssl.certificate_authorities: ["/usr/share/elastic-agent/certs/ca/ca.crt"]
+
+# Minimal output configuration to satisfy the agent startup
+output.elasticsearch:
+  hosts: ["https://es01:9200"]
+  username: "elastic"
+  password: "${ELASTIC_PASSWORD}"
+  protocol: "https"
+  ssl.certificate_authorities: ["/usr/share/elastic-agent/certs/ca/ca.crt"]
