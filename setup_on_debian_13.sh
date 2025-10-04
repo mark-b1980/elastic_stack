@@ -39,11 +39,11 @@ ufw status
 # Generate random keys and passwords
 ################################################################################################
 # Generate random password & keys
-PASSWORD=$(openssl rand -base64 12)
-ENCRYPTION_KEY=$(openssl rand -base64 32)
-API_TOKEN=$(openssl rand -base64 32)
+PASSWORD=$(openssl rand -base64 16 | sed 's/=/U/g' | sed 's|/|3|g' | sed 's|+|t|g')
+ENCRYPTION_KEY=$(openssl rand -base64 32 | sed 's/=/B/g' | sed 's|/|5|g' | sed 's|+|a|g')
+API_TOKEN=$(openssl rand -base64 32 | sed 's/=/X/g' | sed 's|/|0|g' | sed 's|+|p|g')
 
-cp env.sample .env
+cp env.template .env
 echo "ELASTIC_PASSWORD=$PASSWORD" >> .env
 echo "KIBANA_PASSWORD=$PASSWORD" >> .env
 echo "ENCRYPTION_KEY=$ENCRYPTION_KEY" >> .env
@@ -56,13 +56,15 @@ getent group docker || groupadd docker
 read -p "Enter the username to add to the docker group: " USER_NAME
 usermod -aG docker $USER_NAME
 
-
+# Prompt user for IP address
+read -p "Enter the server IP address: " IP 
+echo "SETTING IP: $IP"
 
 ################################################################################################
-# Start Elastic Stack
+# Start Elastic Stack & print password
 ################################################################################################
 docker compose up -d
-echo "Waiting 30 seconds for Elastic Stack to start..."
+echo "Waiting 30 seconds for Elastic Stack to fully start..."
 sleep 30
 docker compose ps
 
