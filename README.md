@@ -7,6 +7,7 @@
     - [Debugging issues](#debugging-issues)
   - [3. Setting up additional ports for log inguestion](#3-setting-up-additional-ports-for-log-inguestion)
   - [4. Setting up a integration](#4-setting-up-a-integration)
+    - [Settings for pfSense and Windows Integration](#settings-for-pfsense-and-windows-integration)
   - [5. Setting up an Agent](#5-setting-up-an-agent)
 
 
@@ -107,12 +108,37 @@ Using the `-f` flag, is constantly following the log stream and printing the new
     ```json
         elasticsearch {
             ...
-            index => "logs-pfsense.log-default"
             pipeline => "logs-pfsense.log-1.22.0" 
         }
     ```
 
 Furthermore I added the `Windows` integration and configured it to inguest Sysmon, Defender and Powershell logs.
+
+### Settings for pfSense and Windows Integration
+
+**pfSense UDP**
+
+| Integration name | Syslog host | Syslog Port | New agent policy name |
+|------------------|-------------|-------------|-----------------------|
+| `pfsense`        | `0.0.0.0`   | `5141`      | `pfsense-policy`      |
+
+**Windows**
+
+Integration name: `windows-additional-logs`
+
+Activate:
+
+ - AppLocker/EXE and DLL
+ - AppLocker/MSI and Script
+ - Packaged app-Deployment
+ - Packaged app-Execution
+ - Forwarded
+ - Powershell
+ - Powershell Operational
+ - Sysmon operational
+ - Windows Defender
+
+Policy name: `windows-additional-logs-policy`
 
 ## 5. Setting up an Agent 
 

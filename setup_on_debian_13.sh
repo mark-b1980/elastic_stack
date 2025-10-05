@@ -58,7 +58,9 @@ usermod -aG docker $USER_NAME
 
 # Prompt user for IP address
 read -p "Enter the server IP address: " IP 
-echo "SETTING IP: $IP"
+echo "SERVER IP: $IP"
+
+echo "ELASTIC_IP=$IP" >> .env
 
 ################################################################################################
 # Start Elastic Stack & print password
@@ -76,3 +78,5 @@ echo "  username: elastic"
 echo "  password: $PASSWORD"
 echo "---------------------------------------------------------------------------------------------------------"
 
+CID=$(docker ps -qf name=es01)
+docker cp "$CID:/usr/share/elasticsearch/config/certs/ca/ca.crt" ./installation_scripts/elastic-ca.crt
