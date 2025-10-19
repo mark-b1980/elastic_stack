@@ -245,7 +245,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s -k --cert certs/fleet-server/fleet-server.crt --key certs/fleet-server/fleet-server.key https://localhost:8220/api/status | grep -q 'ok'",
+          "curl -s -k --cert certs/fleet-server/fleet-server.crt --key certs/fleet-server/fleet-server.key https://localhost:8220/api/status | grep -q 'HEALTHY'",
         ]
       interval: 10s
       timeout: 10s
